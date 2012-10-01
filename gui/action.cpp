@@ -14,6 +14,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <dirent.h>
 
 #include <string>
 #include <sstream>
@@ -478,7 +479,29 @@ int GUIAction::doAction(Action action, int isThreaded /* = 0 */)
 		}
 		operation_end(0, simulate);
 	}
-	
+
+	if(function == "multirom")
+	{
+		ui_print("Mounting sd-ext...\n");
+		__system("mount /sd-ext");
+		DIR *multirom = opendir("/sd-ext/multirom");
+		if(!multirom)
+		{
+			ui_print("Could not find multirom folder!\n");
+			DataManager::SetValue("multirom_msg", "Could not find MultiROM folder!");
+			return gui_changePage("multirom_msg");
+		}
+		closedir(multirom);
+
+		DIR *rom_dir = opendir("/sd-ext/multirom/rom");
+		if(rom_dir)
+		{
+			closedir(rom_dir);
+			return gui_changePage("multirom_active");
+		}
+		return gui_changePage("multirom_noactive");
+	}
+
 	if (function == "copylog")
 	{
 		operation_start("Copy Log");

@@ -2543,6 +2543,14 @@
 			</object>
 
 			<object type="button">
+				<placement x="%col2_x%" y="%row3_y%" />
+				<font resource="font" color="%button_text_color%" />
+				<text>MultiROM</text>
+				<image resource="main_button" />
+				<action function="multirom"></action>
+			</object>
+
+			<object type="button">
 				<condition var1="tw_has_injecttwrp" var2="1" />
 				<placement x="%col2_x%" y="%row4_y%" />
 				<font resource="font" color="%button_text_color%" />
@@ -3497,6 +3505,133 @@
 				<touch key="back" />
 				<action function="page">terminalfolder</action>
 			</object>
+		</page>
+
+		<page name="multirom_noactive">
+			<object type="template" name="header" />
+
+			<object type="text" color="%text_color%">
+				<font resource="font" />
+				<placement x="%center_x%" y="%row1_header_y%" placement="5" />
+				<text>MultiROM (no active)</text>
+			</object>
+
+			<object type="button">
+				<placement x="%col1_x%" y="%row1_y%" />
+				<font resource="font" color="%button_text_color%" />
+				<text>Activate</text>
+				<image resource="main_button" />
+				<action function="mrom_activate_mv"></action>
+			</object>
+
+			<object type="button">
+				<placement x="%col2_x%" y="%row1_y%" />
+				<font resource="font" color="%button_text_color%" />
+				<text>Create(curr ROM)</text>
+				<image resource="main_button" />
+				<action function="mrom_create_curr"></action>
+			</object>
+			<object type="button">
+				<placement x="%col1_x%" y="%row2_y%" />
+				<font resource="font" color="%button_text_color%" />
+				<text>Create (ZIP)</text>
+				<image resource="main_button" />
+				<action function="mrom_create_zip"></action>
+			</object>
+
+			<object type="action">
+				<touch key="home" />
+				<action function="page">main</action>
+			</object>
+
+			<object type="action">
+				<touch key="back" />
+				<action function="page">advanced</action>
+			</object>
+			<object type="template" name="footer" />
+		</page>
+
+		<page name="multirom_active">
+			<object type="template" name="header" />
+
+			<object type="text" color="%text_color%">
+				<font resource="font" />
+				<placement x="%center_x%" y="%row1_header_y%" placement="5" />
+				<text>MultiROM (active)</text>
+			</object>
+
+			<object type="button">
+				<placement x="%col1_x%" y="%row1_y%" />
+				<font resource="font" color="%button_text_color%" />
+				<text>Deactivate</text>
+				<image resource="main_button" />
+				<action function="mrom_deactivate"></action>
+			</object>
+
+			<object type="button">
+				<placement x="%col2_x%" y="%row1_y%" />
+				<font resource="font" color="%button_text_color%" />
+				<text>Erase curr ROM</text>
+				<image resource="main_button" />
+				<action function="mrom_erase"></action>
+			</object>
+
+			<object type="button">
+				<placement x="%col1_x%" y="%row2_y%" />
+				<font resource="font" color="%button_text_color%" />
+				<text>Copy modules</text>
+				<image resource="main_button" />
+				<action function="mrom_cp_modules"></action>
+			</object>
+
+			<object type="button">
+				<placement x="%col2_x%" y="%row2_y%" />
+				<font resource="font" color="%button_text_color%" />
+				<text>Flash ZIP</text>
+				<image resource="main_button" />
+				<action function="mrom_flash_zip"></action>
+			</object>
+
+			<object type="action">
+				<touch key="home" />
+				<action function="page">main</action>
+			</object>
+
+			<object type="action">
+				<touch key="back" />
+				<action function="page">advanced</action>
+			</object>
+			<object type="template" name="footer" />
+		</page>
+
+		<page name="multirom_msg">
+			<object type="template" name="header" />
+
+			<object type="text" color="%text_color%">
+				<font resource="font" />
+				<placement x="%center_x%" y="%row1_header_y%" placement="5" />
+				<data name="multirom_msg" />
+				<text>%multirom_msg%</text>
+			</object>
+
+			<object type="button">
+				<placement x="%col1_x%" y="%row1_y%" />
+				<font resource="font" color="%button_text_color%" />
+				<text>Back</text>
+				<image resource="main_button" />
+				<action function="page">advanced</action>
+			</object>
+
+			<object type="action">
+				<touch key="home" />
+				<action function="page">main</action>
+			</object>
+
+			<object type="action">
+				<touch key="back" />
+				<action function="page">advanced</action>
+			</object>
+			<object type="template" name="footer" />
 		</page>
 	</pages>
 </recovery>

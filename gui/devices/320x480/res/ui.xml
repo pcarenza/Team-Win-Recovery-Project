@@ -3521,7 +3521,7 @@
 				<font resource="font" color="%button_text_color%" />
 				<text>Activate</text>
 				<image resource="main_button" />
-				<action function="mrom_activate_mv"></action>
+				<action function="page">multirom_backup_select</action>
 			</object>
 
 			<object type="button">
@@ -3529,14 +3529,14 @@
 				<font resource="font" color="%button_text_color%" />
 				<text>Create(curr ROM)</text>
 				<image resource="main_button" />
-				<action function="mrom_create_curr"></action>
+				<action function="multirom_act">create_curr</action>
 			</object>
 			<object type="button">
 				<placement x="%col1_x%" y="%row2_y%" />
 				<font resource="font" color="%button_text_color%" />
 				<text>Create (ZIP)</text>
 				<image resource="main_button" />
-				<action function="mrom_create_zip"></action>
+				<action function="multirom_act">create_zip</action>
 			</object>
 
 			<object type="action">
@@ -3565,7 +3565,7 @@
 				<font resource="font" color="%button_text_color%" />
 				<text>Deactivate</text>
 				<image resource="main_button" />
-				<action function="mrom_deactivate"></action>
+				<action function="multirom_act">deactivate</action>
 			</object>
 
 			<object type="button">
@@ -3573,7 +3573,7 @@
 				<font resource="font" color="%button_text_color%" />
 				<text>Erase curr ROM</text>
 				<image resource="main_button" />
-				<action function="mrom_erase"></action>
+				<action function="multirom_act">erase_ask</action>
 			</object>
 
 			<object type="button">
@@ -3581,7 +3581,7 @@
 				<font resource="font" color="%button_text_color%" />
 				<text>Copy modules</text>
 				<image resource="main_button" />
-				<action function="mrom_cp_modules"></action>
+				<action function="multirom_act">copy_modules</action>
 			</object>
 
 			<object type="button">
@@ -3589,7 +3589,7 @@
 				<font resource="font" color="%button_text_color%" />
 				<text>Flash ZIP</text>
 				<image resource="main_button" />
-				<action function="mrom_flash_zip"></action>
+				<action function="multirom_act">flash_zip</action>
 			</object>
 
 			<object type="action">
@@ -3633,5 +3633,158 @@
 			</object>
 			<object type="template" name="footer" />
 		</page>
+
+		<page name="multirom_progress">
+			<object type="template" name="header" />
+
+			<object type="console">
+				<placement x="%console_x%" y="%row1_y%" w="%console_width%" h="%console_install_height%" />
+				<color foreground="%console_foreground%" background="%console_background%" scroll="%console_scroll%" />
+				<font resource="fixed" />
+			</object>
+
+			<object type="text" color="%text_color%">
+				<font resource="font" />
+				<placement x="%center_x%" y="%row17_text_y%" placement="5" />
+				<data name="multirom_msg" />
+				<text>%multirom_msg%</text>
+			</object>
+
+			<object type="template" name="progress_bar" />
+		</page>
+
+		<page name="multirom_done">
+			<object type="template" name="header" />
+
+			<object type="text" color="%text_color%">
+				<font resource="font" />
+				<placement x="%center_x%" y="%row1_header_y%" placement="5" />
+				<data name="multirom_done_title" />
+				<text>%multirom_done_title%</text>
+			</object>
+
+			<object type="console">
+				<placement x="%console_x%" y="%row1_y%" w="%console_width%" h="%console_installdone_height%" />
+				<color foreground="%console_foreground%" background="%console_background%" scroll="%console_scroll%" />
+				<font resource="fixed" />
+			</object>
+
+			<object type="text" color="%text_color%">
+				<font resource="font" />
+				<placement x="%center_x%" y="%row17_text_y%" placement="5" />
+				<data name="multirom_done_msg" />
+				<text>%multirom_done_msg%</text>
+			</object>
+
+			<object type="button">
+				<placement x="%center_x%" y="%row4_y%" />
+				<font resource="font" color="%button_text_color%" />
+				<text>Done</text>
+				<image resource="main_button" />
+				<action function="multirom"></action>
+			</object>
+
+			<object type="action">
+				<touch key="home" />
+				<action function="page">main</action>
+			</object>
+
+			<object type="action">
+				<touch key="back" />
+				<action function="multirom"></action>
+			</object>
+			<object type="template" name="footer" />
+		</page>
+
+		<page name="multirom_swipe_confirm">
+			<object type="template" name="header" />
+
+			<object type="text" color="%text_color%">
+				<font resource="font" />
+				<placement x="%center_x%" y="%row1_header_y%" placement="5" />
+				<data name="multirom_confirm_title" />
+				<text>%multirom_confirm_title%</text>
+			</object>
+
+			<object type="text" color="%text_color%">
+				<font resource="font" />
+				<placement x="%center_x%" y="%row1_text_y%" placement="5" />
+				<data name="multirom_confirm_msg" />
+				<text>%multirom_confirm_msg%</text>
+			</object>
+
+			<object type="slider">
+				<placement x="%slider_x%" y="%slider_y%" placement="5" />
+				<resource base="slider" used="slider-used" touch="slider-touch" />
+				<action function="multirom_act">confirmed</action>
+			</object>
+
+			<object type="text" color="%text_color%">
+				<font resource="font" />
+				<placement x="%center_x%" y="%slider_text_y%" placement="4" />
+				<data name="multirom_confirm_desc" />
+				<text>%multirom_confirm_desc%</text>
+			</object>
+
+			<object type="action">
+				<touch key="home" />
+				<action function="page">main</action>
+			</object>
+
+			<object type="action">
+				<touch key="back" />
+				<action function="multirom"></action>
+			</object>
+			<object type="template" name="footer" />
+		</page>
+
+		<page name="multirom_backup_select">
+			<object type="template" name="header" />
+
+			<object type="text" color="%text_color%">
+				<font resource="font" />
+				<placement x="%center_x%" y="%row1_header_y%" placement="5" />
+				<text>Select backup to activate</text>
+			</object>
+			
+			<object type="fileselector">
+				<placement x="%fileselector_x%" y="%row2_text_y%" w="%fileselector_width%" h="280" />
+				<header background="%fileselector_header_background%" textcolor="%fileselector_header_textcolor%" separatorcolor="%fileselector_header_separatorcolor%" separatorheight="%fileselector_header_separatorheight%" />
+				<text>Choose:</text>
+				<separator color="%fileselector_separatorcolor%" height="%fileselector_separatorheight%" />
+				<sort name="tw_gui_sort_order" />
+				<icon folder="folder_icon" file="file_icon" />
+				<background color="%fileselector_background%" />
+				<font resource="filelist" spacing="%fileselector_spacing%" color="%text_color%" />
+				<filter folders="1" files="0" nav="0"/>
+				<path name="multirom_backup_loc" default="/sd-ext/multirom/backup" />
+				<data name="multirom_backup" default=""/>
+				<selection name="multirom_backup" />
+			</object>
+
+			<object type="slider">
+				<placement x="%slider_x%" y="%slider_y%" placement="5" />
+				<resource base="slider" used="slider-used" touch="slider-touch" />
+				<action function="multirom_act">activate</action>
+			</object>
+
+			<object type="text" color="%text_color%">
+				<font resource="font" />
+				<placement x="%center_x%" y="%slider_text_y%" placement="4" />
+				<text>Swipe to activate</text>
+			</object>
+
+			<object type="action">
+				<touch key="home" />
+				<action function="page">main</action>
+			</object>
+
+			<object type="action">
+				<touch key="back" />
+				<action function="multirom"></action>
+			</object>
+			<object type="template" name="footer" />
+		</page>
+
 	</pages>
 </recovery>

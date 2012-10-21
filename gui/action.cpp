@@ -63,6 +63,7 @@ int gui_start();
 
 #include "rapidxml.hpp"
 #include "objects.hpp"
+#include "../multirom.h"
 
 
 void curtainClose(void);
@@ -502,6 +503,24 @@ int GUIAction::doAction(Action action, int isThreaded /* = 0 */)
 		return gui_changePage("multirom_noactive");
 	}
 
+	if(function == "multirom_act")
+	{
+		if(arg == "create_curr")
+			return MultiROM::create_from_current();
+		else if(arg == "deactivate")
+			return MultiROM::deactivate_backup(false);
+		else if(arg == "erase_ask")
+			return MultiROM::erase_ask();
+		else if(arg == "confirmed")
+			return MultiROM::confirmed();
+		else if(arg == "activate")
+			return MultiROM::activate();
+		else if(arg == "copy_modules")
+			return MultiROM::copy_modules();
+		else
+			return 0;
+	}
+
 	if (function == "copylog")
 	{
 		operation_start("Copy Log");
@@ -519,7 +538,7 @@ int GUIAction::doAction(Action action, int isThreaded /* = 0 */)
 		operation_end(0, simulate);
 		return 0;
 	}
-	
+
 	if (function == "compute" || function == "addsubtract")
 	{
 		if (arg.find("+") != string::npos)

@@ -27,6 +27,10 @@ extern "C" {
 #include "backstore.h"
 #include "extra-functions.h"
 #include "format.h"
+#include "install.h"
+#include "minzip/Zip.h"
+#include "mounts.h"
+#include "roots.h"
 }
 
 #include "gui/objects.hpp"
@@ -41,14 +45,20 @@ public:
 	static int confirmed();
 	static int activate();
 	static int copy_modules();
+	static int create_from_zip();
+	static int flash_zip_select();
 
 private:
 	static bool extract_ramdisk();
 	static bool copy_folder(char *folder);
 	static bool bg_system(char *cmd);
-	
+	static int flash_zip(bool newRom);
+	static bool prepare_zip_file(char *file);
+	static bool backup_boot_image(bool restore);
+	static bool change_mountpoints(bool apply);
+
 	static std::string m_confirm_action;
-	
+
 	// From mkbootimg/bootimg.h
 #define BOOT_MAGIC "ANDROID!"
 #define BOOT_MAGIC_SIZE 8
@@ -88,41 +98,41 @@ int MultiROM::create_from_current()
 	DataManager::SetValue("ui_progress_frames", 100);
 	DataManager::SetValue("ui_progress_portion", 0);
 
-	static const int steps = 6;
-	
+	static const float step = 1.f/6.f;
+
 	ui_print("Mounting DATA, SYSTEM & CACHE...\n");
 	__system("mount /data");
 	__system("mount /system");
 	__system("mount /cache");
 
-	DataManager::SetValue("ui_progress_portion", 1*(100/steps));
+	ui_set_progress(1*step);
 
 	__system("mkdir /sd-ext/multirom/rom");
 
 	if(!extract_ramdisk())
 		goto fail;
-	DataManager::SetValue("ui_progress_portion", 2*(100/steps));
+	ui_set_progress(2*step);
 
 	if(!copy_folder("cache"))
 		goto fail;
-	DataManager::SetValue("ui_progress_portion", 3*(100/steps));
-	
+	ui_set_progress(3*step);
+
 	if(!copy_folder("data"))
 		goto fail;
-	DataManager::SetValue("ui_progress_portion", 4*(100/steps));
-	
+	ui_set_progress(4*step);
+
 	if(!copy_folder("system"))
 		goto fail;
-	DataManager::SetValue("ui_progress_portion", 5*(100/steps));
+	ui_set_progress(5*step);
 
-	DataManager::SetValue("ui_progress_portion", 100);
+	ui_set_progress(1.f);
 
 	ui_print("All done\n");
 
 	DataManager::SetValue("multirom_done_title", "ROM successfuly created!");
 	DataManager::SetValue("multirom_done_msg", "");
 	return gui_changePage("multirom_done");
-	
+
 fail:
 	__system("rm -r /sd-ext/multirom/rom && sync");
 	DataManager::SetValue("multirom_done_title", "Failed to create ROM!");
@@ -269,7 +279,7 @@ int MultiROM::deactivate_backup(bool copy)
 
 	sprintf(cmd, "%s /sd-ext/multirom/rom /sd-ext/multirom/backup/rom_%u%02u%02u-%02u%02u && sync", copy ? "cp -r -p" : "mv",
 			loctm->tm_year+1900, loctm->tm_mon+1, loctm->tm_mday, loctm->tm_hour, loctm->tm_min);
-	
+
 	if(__system(cmd) != 0)
 		DataManager::SetValue("multirom_done_title", "Failed to deactivate ROM!");
 	else
@@ -309,6 +319,10 @@ int MultiROM::confirmed()
 {
 	if(m_confirm_action == "erase")
 		return erase();
+	else if(m_confirm_action == "create_zip")
+		return flash_zip(true);
+	else if(m_confirm_action == "flash_zip")
+		return flash_zip(false);
 	return 0;
 }
 
@@ -318,13 +332,16 @@ int MultiROM::activate()
 
 	if(backup == "")
 		return 0;
+	
+	if(backup.find("/sd-ext/") == -1)
+		backup.insert(0, "/sd-ext/multirom/backup/");
 
 	DataManager::SetValue("multirom_msg", "Activating ROM");
 	gui_changePage("multirom_progress");
-	
-	ui_print("Activating backup\n\n");
-	std::string cmd = "mv " + backup + " /sd-ext/multirom/rom && sync";
-	
+
+	ui_print("Activating backup:\n%s\n\n", backup.substr(backup.rfind("/")+1).c_str());
+	std::string cmd = "mv \"" + backup + "\" /sd-ext/multirom/rom && sync";
+
 	if(!bg_system((char*)cmd.c_str()))
 		DataManager::SetValue("multirom_done_title", "Failed to activate ROM!");
 	else
@@ -338,7 +355,7 @@ int MultiROM::copy_modules()
 {
 	DataManager::SetValue("multirom_msg", "Copy kernel modules");
 	gui_changePage("multirom_progress");
-	
+
 	ui_print("Mounting SYSTEM...\n");
 	__system("mount /system");
 
@@ -352,4 +369,234 @@ int MultiROM::copy_modules()
 	return gui_changePage("multirom_done");
 }
 
+int MultiROM::create_from_zip()
+{
+	m_confirm_action = "create_zip";
+	return gui_changePage("multirom_zip_select");
+}
+
+int MultiROM::flash_zip_select()
+{
+	m_confirm_action = "flash_zip";
+	return gui_changePage("multirom_zip_select");
+}
+
+int MultiROM::flash_zip(bool newRom)
+{
+	std::string file_str = DataManager::GetStrValue("multirom_zip");
+	if(file_str == "")
+		return 0;
+
+	char *file = (char*)file_str.c_str();
+	int status = 0;
+
+	ui_print("Flashing file %s\n", file);
+
+	DataManager::SetValue("multirom_msg", "Create ROM from ZIP");
+	gui_changePage("multirom_progress");
+
+	ui_print("Preparing ZIP file...\n");
+	if(!prepare_zip_file(file))
+	{
+		ui_print("Сan't prepare ZIP file!\n");
+		DataManager::SetValue("multirom_done_title", "Failed to create from ZIP!");
+		goto exit;
+	}
+
+	if(!backup_boot_image(false))
+	{
+		DataManager::SetValue("multirom_done_title", "Failed to create from ZIP!");
+		goto exit;
+	}
+
+	ui_print("Mounting folders...\n");
+
+	__system("mkdir -p /sd-ext/multirom/rom/system");
+	__system("mkdir -p /sd-ext/multirom/rom/cache");
+	__system("mkdir -p /sd-ext/multirom/rom/data");
+	__system("mkdir -p /sd-ext/multirom/rom/boot");
+
+	change_mountpoints(true);
+	__system("mount /data");
+	__system("mount /system");
+	__system("mount /cache");
+
+	ui_print("Executing update package...\n");
+
+	status = install_package("/tmp/mr_update.zip");
+
+	__system("rm /tmp/mr_update.zip");
+
+	if (status != INSTALL_SUCCESS)
+	{
+		if(newRom)
+			__system("rm -r /sd-ext/multirom/rom");
+
+		ui_print("\nInstallation aborted.\n");
+		ui_print("Restoring mount points\n");
+		change_mountpoints(false);
+
+		DataManager::SetValue("multirom_done_title", "Failed to create from ZIP!");
+		goto exit;
+	}
+	else
+		ui_print("\nInstall from sdcard complete.\n");
+
+	if(newRom)
+	{
+		ui_print("Extracting boot image...\n");
+		extract_ramdisk();
+	}
+	ui_print("Restoring boot image backup..\n");
+	backup_boot_image(true);
+
+	ui_print("Restoring mount points\n");
+	change_mountpoints(false);
+
+	ui_print("Copying modules...\n");
+	__system("mount /system");
+	bg_system("cp /system/lib/modules/* /sd-ext/multirom/rom/system/lib/modules/ && sync");
+
+	ui_print("Complete!\n");
+
+	DataManager::SetValue("multirom_done_title", "ROM successfuly created!");
+exit:
+	DataManager::SetValue("multirom_done_msg", "");
+	return gui_changePage("multirom_done");
+}
+
+#define MR_UPDATE_SCRIPT_PATH  "META-INF/com/google/android/"
+#define MR_UPDATE_SCRIPT_NAME  "META-INF/com/google/android/updater-script"
+
+bool MultiROM::prepare_zip_file(char *file)
+{
+	bool res = true;
+
+	const ZipEntry *script_entry;
+	int script_len;
+	char* script_data;
+	int itr = 0;
+	char *token;
+
+	char cmd[256];
+	__system("rm /tmp/mr_update.zip");
+	sprintf(cmd, "cp \"%s\" /tmp/mr_update.zip", file);
+	__system(cmd);
+
+	sprintf(cmd, "mkdir -p /tmp/%s", MR_UPDATE_SCRIPT_PATH);
+	__system(cmd);
+
+	sprintf(cmd, "/tmp/%s", MR_UPDATE_SCRIPT_NAME);
+
+	FILE *new_script = fopen(cmd, "w");
+	if(!new_script)
+		return false;
+
+	ZipArchive zip;
+	if (mzOpenZipArchive("/tmp/mr_update.zip", &zip) != 0)
+	{
+		res = false;
+		goto exit;
+	}
+
+	script_entry = mzFindZipEntry(&zip, MR_UPDATE_SCRIPT_NAME);
+	if(!script_entry)
+	{
+		res = false;
+		goto exit;
+	}
+
+	if (read_data(&zip, script_entry, &script_data, &script_len) < 0)
+	{
+		res = false;
+		goto exit;
+	}
+
+	mzCloseZipArchive(&zip);
+
+	token = strtok(script_data, "\n");
+	while(token)
+	{
+		if((!strstr(token, "mount") && !strstr(token, "format")) || !strstr(token, "MTD"))
+		{
+			fputs(token, new_script);
+			fputc('\n', new_script);
+		}
+		token = strtok(NULL, "\n");
+	}
+
+	free(script_data);
+	fclose(new_script);
+
+	sprintf(cmd, "cd /tmp && zip mr_update.zip %s", MR_UPDATE_SCRIPT_NAME);
+	if(__system(cmd) < 0)
+		return false;
+
+goto exit_succes;
+exit:
+	mzCloseZipArchive(&zip);
+	fclose(new_script);
+
+exit_succes:
+	return res;
+}
+
+bool MultiROM::backup_boot_image(bool restore)
+{
+	if(restore)
+	{
+		ui_print("Restoring boot.img...\n");
+		if(!bg_system("flash_image boot /tmp/boot-backup.img"))
+		{
+			ui_print("Could not restore boot.img!\n");
+			return false;
+		}
+	}
+	else
+	{
+		ui_print("Creating backup of boot.img...\n");
+		__system("rm /tmp/boot-backup.img");
+		if(!bg_system("dump_image boot /tmp/boot-backup.img"))
+		{
+			ui_print("Could not dump boot.img!\n");
+			return false;
+		}
+	}
+	return true;
+}
+
+bool MultiROM::change_mountpoints(bool apply)
+{
+	__system("umount /system");
+	__system("umount /data");
+	__system("umount /cache");
+
+	if(apply)
+	{
+		__system("cp /etc/recovery.fstab /etc/recovery.fstab.back");
+		__system("cp /etc/fstab /etc/fstab.back");
+
+		__system("echo \"/data\tauto\t/sd-ext/multirom/rom/data\" > /etc/recovery.fstab");
+		__system("echo \"/system\tauto\t/sd-ext/multirom/rom/system\" >> /etc/recovery.fstab");
+		__system("echo \"/cache\tauto\t/sd-ext/multirom/rom/cache\" >> /etc/recovery.fstab");
+		__system("echo \"/sdcard\tvfat\t/dev/block/mmcblk0p1\t/dev/block/mmcblk0\" >> /etc/recovery.fstab");
+		__system("echo \"/sd-ext\tauto\t/dev/block/mmcblk0p2\" >> /etc/recovery.fstab");
+
+		__system("echo \"/sd-ext/multirom/rom/system /system auto bind\" > /etc/fstab");
+		__system("echo \"/sd-ext/multirom/rom/data /data auto bind\" >> /etc/fstab");
+		__system("echo \"/sd-ext/multirom/rom/cache /cache auto bind\" >> /etc/fstab");
+		__system("echo \"/dev/block/mmcblk0p1 /sdcard vfat rw\" >> /etc/fstab");
+		__system("echo \"/dev/block/mmcblk0p2 /sd-ext auto rw\" >> /etc/fstab");
+	}
+	else
+	{
+		__system("cp /etc/recovery.fstab.back /etc/recovery.fstab");
+		__system("cp /etc/fstab.back /etc/fstab");
+	}
+	scan_mounted_volumes();
+
+	free(get_device_volumes());
+	load_volume_table();
+	return true;
+}
 #endif

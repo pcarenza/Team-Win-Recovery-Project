@@ -3761,19 +3761,56 @@
 				<data name="multirom_backup" default=""/>
 				<selection name="multirom_backup" />
 			</object>
-
-			<object type="slider">
-				<placement x="%slider_x%" y="%slider_y%" placement="5" />
-				<resource base="slider" used="slider-used" touch="slider-touch" />
-				<action function="multirom_act">activate</action>
+			
+			<object type="action">
+				<condition var1="multirom_backup" op="modified" />
+				<actions>
+					<action function="multirom_act">activate</action>
+				</actions>
 			</object>
+
+			<object type="action">
+				<touch key="home" />
+				<action function="page">main</action>
+			</object>
+
+			<object type="action">
+				<touch key="back" />
+				<action function="multirom"></action>
+			</object>
+			<object type="template" name="footer" />
+		</page>
+		
+		<page name="multirom_zip_select">
+			<object type="template" name="header" />
 
 			<object type="text" color="%text_color%">
 				<font resource="font" />
-				<placement x="%center_x%" y="%slider_text_y%" placement="4" />
-				<text>Swipe to activate</text>
+				<placement x="%center_x%" y="%row1_header_y%" placement="5" />
+				<text>Select ZIP file</text>
+			</object>
+			
+			<object type="fileselector">
+				<placement x="%fileselector_x%" y="%row2_text_y%" w="%fileselector_width%" h="280" />
+				<header background="%fileselector_header_background%" textcolor="%fileselector_header_textcolor%" separatorcolor="%fileselector_header_separatorcolor%" separatorheight="%fileselector_header_separatorheight%" />
+				<text>Choose:</text>
+				<separator color="%fileselector_separatorcolor%" height="%fileselector_separatorheight%" />
+				<sort name="tw_gui_sort_order" />
+				<icon folder="folder_icon" file="file_icon" />
+				<background color="%fileselector_background%" />
+				<font resource="filelist" spacing="%fileselector_spacing%" color="%text_color%" />
+				<filter extn=".zip" folders="1" files="1"/>
+				<path name="multirom_zip_loc" default="/sdcard" />
+				<data name="multirom_zip"/>
+				<selection name="multirom_zip_f" />
 			</object>
 
+			<object type="action">
+				<condition var1="multirom_zip" op="modified" />
+				<actions>
+					<action function="multirom_act">confirmed</action>
+				</actions>
+			</object>
 			<object type="action">
 				<touch key="home" />
 				<action function="page">main</action>

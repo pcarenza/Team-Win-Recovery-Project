@@ -46,4 +46,6 @@ int unmount_internal_storage(void);
 // it is mounted.
 int format_volume(const char* volume);
 
+Volume* get_device_volumes();
+
 #endif  // RECOVERY_ROOTS_H_

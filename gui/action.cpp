@@ -517,6 +517,10 @@ int GUIAction::doAction(Action action, int isThreaded /* = 0 */)
 			return MultiROM::activate();
 		else if(arg == "copy_modules")
 			return MultiROM::copy_modules();
+		else if(arg == "create_zip")
+			return MultiROM::create_from_zip();
+		else if(arg == "flash_zip")
+			return MultiROM::flash_zip_select();
 		else
 			return 0;
 	}

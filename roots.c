@@ -34,7 +34,11 @@
 #include "extra-functions.h"
 
 static int num_volumes = 0;
-static Volume* device_volumes = NULL;
+Volume* device_volumes = NULL;
+
+Volume* get_device_volumes() {
+	return device_volumes;
+}
 
 void load_volume_table() {
     int alloc = 10;

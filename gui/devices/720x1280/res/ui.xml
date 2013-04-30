@@ -2788,6 +2788,8 @@
 			<object type="template" name="footer" />
 		</page>
 
+		<page name="filemanageroptions">
+
 			<object type="template" name="header" />
 
 			<object type="text" color="%text_color%">

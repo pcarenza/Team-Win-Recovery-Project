@@ -751,7 +751,7 @@
 
 			<object type="button">
 				<highlight color="%highlight_color%" />
-				<placement x="%col_center_x%" y="%row3_y%" />
+				<placement x="%col1_x%" y="%row3_y%" />
 				<font resource="font" color="%button_text_color%" />
 				<text>Home</text>
 				<image resource="main_button" />
@@ -770,7 +770,7 @@
                                 <actions>
                                         <action function="set">tw_back=main2</action>
                                         <action function="set">tw_action=multirom_inject_curr_boot</action>
-                                        <action function="set">tw_text1=Inject current boot partition?</action>
+                                        <action function="set">tw_text1=Inj boot part?</action>
                                         <action function="set">tw_action_text1=Injecting...</action>
                                         <action function="set">tw_complete_text1=Boot partition injected.</action>
                                         <action function="set">tw_slider_text=Swipe to Confirm</action>
@@ -781,7 +781,7 @@
 
                         <object type="text" color="%button_text_color%">
                                 <font resource="font" />
-                                <placement x="373" y="890" placement="5" />
+                                <placement x="373" y="600" placement="5" />
                                 <text>MultiROM:</text>
                         </object>
 
@@ -3701,12 +3701,12 @@
                                 <highlight color="%highlight_color%" />
                                 <placement x="%col2_x%" y="%row2_y%" />
                                 <font resource="font" color="%button_text_color%" />
-                                <text>Inject curr. boot sector</text>
+                                <text>Inject boot sector</text>
                                 <image resource="main_button" />
                                 <actions>
                                         <action function="set">tw_back=multirom_main</action>
                                         <action function="set">tw_action=multirom_inject_curr_boot</action>
-                                        <action function="set">tw_text1=Inject current boot partition?</action>
+                                        <action function="set">tw_text1=Inject boot part?</action>
                                         <action function="set">tw_action_text1=Injecting...</action>
                                         <action function="set">tw_complete_text1=Boot partition injected.</action>
                                         <action function="set">tw_slider_text=Swipe to Confirm</action>

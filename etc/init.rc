@@ -8,7 +8,8 @@ on init
     export LD_LIBRARY_PATH .:/sbin
     export ANDROID_ROOT /system
     export ANDROID_DATA /data
-    export EXTERNAL_STORAGE /sdcard
+    export EXTERNAL_STORAGE /external_sd
+    export INTERNAL_STORAGE /sdcard
 
     symlink /system/etc /etc
 
@@ -19,10 +20,10 @@ on init
     mkdir /external_sd
     mkdir /sd-ext
     mkdir /datadata
-    mkdir /emmc
     mkdir /system
     mkdir /data
     mkdir /cache
+    mkdir /logo
     mount /tmp /tmp tmpfs
 
     chown root shell /tmp
